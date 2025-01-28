@@ -1,3 +1,5 @@
+**The main proposal is located at [`proposal.md`](https://github.com/MatinDevsHere/LiveView-Prefetching/blob/master/proposal.md)**
+
 # LiveView Prefetching Proposal
 
 This repository contains a proposal to implement prefetching capabilities in Phoenix LiveView, which would enhance the user experience and performance of LiveView web apps.

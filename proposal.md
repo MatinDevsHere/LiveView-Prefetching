@@ -49,6 +49,9 @@ The server and client coordinate through LiveView's WebSocket connection to hand
 
 During prefetching, the system renders the view with all elements and logic except for asynchronous functions (e.g., `assign_async`, `start_async`). This behavior is controlled by a special bit sent from the client to the server, indicating whether the request is a prefetch or a real navigation. If it is unset, it means that a full-on interactive navigation is requested (this decision ensures maximum compatibility with previous versions of LiveView). If it's 0, it means that the prefetching is requested, so async calls shouldn't be made. And if it's set to 1, the server has to only make async calls and return necessary DOM patches to the client, as usual. The huge benefit of this implementation is that it utilizes the abstractions that are already present in the framework, so this proposal can be implemented with the least possible additions.
 
+#### Client-Side Rate Limiting
+The Client-Side implementation should have a simple rate-limiting logic where it limits the amount of prefetch requests the client sends in a second. This approach can time-distribute accidental overloads caused by the large number of prefetchable views, and putting requests in a queue so they don't get rejected either.
+
 ---
 
 ### Client-Side Implementation

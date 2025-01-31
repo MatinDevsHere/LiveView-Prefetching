@@ -2,7 +2,7 @@
 
 ### Overview
 
-This proposal an advanced, optional prefetching system in Phoenix LiveView to optimize dynamic navigation responsiveness and user experience. 
+This proposal is an advanced, optional prefetching system in Phoenix LiveView to optimize dynamic navigation responsiveness and user experience. 
 
 ---
 
@@ -37,17 +37,17 @@ When the server responds with a prefetched view, it stores all of the assigns re
 socket -> assigns -> prefetch -> "/get_cars?page=5 @ 21:05:30... (The expiry timestamp)" -> cars -> [...]
 ```
 
-This approach ensures that the state of prefetches will not be recalculated. Also, using this hierarchial structure for preserving assigns couples them with the current socket, so they'll be cleaned up when the session is ended.
+This approach ensures that the state of prefetches will not be recalculated. Also, using this hierarchical structure for preserving assigns couples them with the current socket, so they'll be cleaned up when the session is ended.
 
 ### Server-Client Interaction
 
-The server and client coordinate through LiveView's WebSocket connection to handle prefetching requests. When the client sends a prefetch request, the server sends the view, which is cached by the client in the browser session storage. This will minimize the client-side logic for cache invalidation, because the browser will clear session storage once the session is ended. Upon user interaction, the cached view is rendered immediately, providing a seamless experience, even on mid/high-latency connections.
+The server and client coordinate through LiveView's WebSocket connection to handle prefetching requests. When the client sends a prefetch request, the server sends the view, which is cached by the client in the browser session storage. This will minimize the client-side logic for cache invalidation because the browser will clear session storage once the session is ended. Upon user interaction, the cached view is rendered immediately, providing a seamless experience, even on mid/high-latency connections.
 
 ---
 
 ### Rendering Logic for Prefetching
 
-During prefetching, the system renders the view with all elements and logic except for asynchronous functions (e.g., `assign_async`, `start_async`). This behavior is controlled by a special bit sent from the client to the server, indicating whether the request is a prefetch or a real navigation. If it is unset, it means that a full-on interactive navigation is requested (this decision ensures maximum compatibility with previous versions of LiveView). If it's 0, it means that the prefetching is requested, so async calls shouldn't be made. And if it's set to 1, the server has to only make async calls and return necessary DOM patches to the client, as usual. The huge benefit of this implementation is that is utilizes the abstractions that are already present in the framework, so this proposal can be implemented with least possible additions.
+During prefetching, the system renders the view with all elements and logic except for asynchronous functions (e.g., `assign_async`, `start_async`). This behavior is controlled by a special bit sent from the client to the server, indicating whether the request is a prefetch or a real navigation. If it is unset, it means that a full-on interactive navigation is requested (this decision ensures maximum compatibility with previous versions of LiveView). If it's 0, it means that the prefetching is requested, so async calls shouldn't be made. And if it's set to 1, the server has to only make async calls and return necessary DOM patches to the client, as usual. The huge benefit of this implementation is that it utilizes the abstractions that are already present in the framework, so this proposal can be implemented with the least possible additions.
 
 ---
 
@@ -65,10 +65,10 @@ To enhance control, a function will be introduced to clear the prefetch cache fo
 
 ## FAQs
 
-- **Are the gains of making a whole separate JS file for client, and adding code at the top of the current system backend worth the benefits of prefetching?**
-Definitely. Take the official example of Phoenix LiveView, [LiveBeats](https://livebeats.fly.dev/). One of the most noticeable things about this app is that it doesn't feel as responsive as some other SPAs you've worked with. The reason lies behind the foundation of Phoenix LiveView. It uses WebSocket connections to communicate with client, eliminating the need of having client-side code to achieve the same result. While this approach brings significant advantages over giving the recipe to the client and "hoping they cook well", it introduces a big problem: **latency**. This effect can significantly impact on web application user experience, especially if the end user has a poor connection, or is geographically distant from where the servers are located. The simplest solution to the latency problem, is to load things before they're requested, so they get immediately swapped, providing a much snappier UX.
+- **Are the gains of making a whole separate JS file for the client, and adding code at the top of the current system backend worth the benefits of prefetching?**
+Definitely. Take the official example of Phoenix LiveView, [LiveBeats](https://livebeats.fly.dev/). One of the most noticeable things about this app is that it doesn't feel as responsive as some other SPAs you've worked with. The reason lies behind the foundation of Phoenix LiveView. It uses WebSocket connections to communicate with client, eliminating the need of having client-side code to achieve the same result. While this approach brings significant advantages over giving the recipe to the client and "hoping they cook well", it introduces a big problem: **latency**. This effect can significantly impact on web application user experience, especially if the end-user has a poor connection, or is geographically distant from where the servers are located. The simplest solution to the latency problem is to load things before they're requested, so they get immediately swapped, providing a much snappier UX.
 
-- **Doesn't prefetching every link on the screen cause server overload?** No. Prefetching, in the way that was proposed above won't cause any severe performance bottlenecks. Unless the resource-intensive operations are wrapped inside loading APIs properly, they won't be executed unless the user has made the real navigation. Even some other frameworks, including [Next.js](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#2-prefetching:~:text=Routes%20are%20automatically%20prefetched%20as%20they%20become%20visible%20in%20the%20user%27s%20viewport.) have turned this option on by default. Also, it worths mentioning that this proposal's prefetching implementation is more flexible than many other alternatives.
+- **Doesn't prefetching every link on the screen cause server overload?** No. Prefetching, in the way that was proposed above, won't cause any severe performance bottlenecks. Unless the resource-intensive operations are wrapped inside loading APIs properly, they won't be executed unless the user has made the real navigation. Even some other frameworks, including [Next.js](https://nextjs.org/docs/app/building-your-application/routing/linking-and-navigating#2-prefetching:~:text=Routes%20are%20automatically%20prefetched%20as%20they%20become%20visible%20in%20the%20user%27s%20viewport.) have turned this option on by default. Also, it worth mentioning that this proposal's prefetching implementation is more flexible than many other alternatives.
 
 - **So you mean that preserving the assigns of all pages that could be possibly loaded is a good idea?** While this approach is not the most optimal way to store the data that is coupled to each prefetched view, is has a high potential for performance improvements; especially, in responses to how the assigns cache is cleared, and how is it stored. TODO.
 
